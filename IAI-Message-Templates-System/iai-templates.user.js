@@ -1,6 +1,5 @@
 // ==UserScript==
 // @name         IAI Message Templates System - COMPLETE VERSION
-// @namespace    https://github.com/maciejdobron/iai-templates
 // @version      1.3.0
 // @description  System szablonów wiadomości ze zmiennymi dla systemu IAI z eksportem/importem
 // @author       Maciej Dobroń
@@ -11,10 +10,11 @@
 // @grant        GM_getValue
 // @grant        GM_deleteValue
 // @run-at       document-idle
-// @updateURL    https://raw.githubusercontent.com/maciejdobron/iai-templates/main/iai-templates.user.js
-// @downloadURL  https://raw.githubusercontent.com/maciejdobron/iai-templates/main/iai-templates.user.js
-// @supportURL   https://github.com/maciejdobron/iai-templates/issues
-// @homepageURL  https://github.com/maciejdobron/iai-templates
+// @updateURL    https://raw.githubusercontent.com/MGIteam/Tampermonkey/main/IAI-Message-Templates-System/iai-templates.user.js
+// @downloadURL  https://raw.githubusercontent.com/MGIteam/Tampermonkey/main/IAI-Message-Templates-System/iai-templates.user.js
+// @supportURL   https://github.com/MGIteam/Tampermonkey/issues
+// @homepageURL  https://github.com/MGIteam/Tampermonkey
+// @namespace    https://github.com/MGIteam/Tampermonkey
 // ==/UserScript==
 
 (function() {
