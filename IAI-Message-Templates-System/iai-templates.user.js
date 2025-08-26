@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IAI Message Templates System - COMPLETE VERSION
 // @namespace    https://github.com/MGIteam/Tampermonkey
-// @version      1.5.0
+// @version      1.4.0
 // @description  System szablonów wiadomości ze zmiennymi dla systemu IAI z eksportem/importem
 // @author       Maciej Dobroń
 // @match        https://*.iai-system.com/panel/tickets.php?action=ins&ticketId=*
@@ -926,31 +926,6 @@ ${templatesFormatted}
                 }
             }
 
-            // POBIERZ IMIĘ I NAZWISKO KLIENTA z post-creator
-            const messageClientCell = document.querySelector('td.row2.message-client');
-            if (messageClientCell) {
-                // Szukaj elementu <b> z id zaczynającym się od "post-creator-"
-                const postCreatorElement = messageClientCell.querySelector('b[id^="post-creator-"]');
-                if (postCreatorElement) {
-                    const fullName = postCreatorElement.textContent.trim();
-                    if (fullName) {
-                        data.clientName = fullName;
-                        console.log('IAI Templates: Pełne imię i nazwisko klienta:', data.clientName);
-
-                        // Rozdziel na imię i nazwisko
-                        const nameParts = fullName.split(' ').filter(part => part.length > 0);
-                        if (nameParts.length >= 1) {
-                            data.clientFirstName = nameParts[0];
-                        }
-                        if (nameParts.length >= 2) {
-                            data.clientLastName = nameParts.slice(1).join(' '); // Ostatnie części jako nazwisko
-                        }
-                        console.log('IAI Templates: Imię klienta:', data.clientFirstName);
-                        console.log('IAI Templates: Nazwisko klienta:', data.clientLastName);
-                    }
-                }
-            }
-
             // POBIERZ DATĘ UTWORZENIA z pierwszego postu
             const firstPostCreator = document.querySelector('#post-creator-0');
             if (firstPostCreator) {
@@ -993,14 +968,15 @@ ${templatesFormatted}
             if (concernsRow && concernsRow.cells[1]) {
                 const concernsCell = concernsRow.cells[1];
                 data.concerns = concernsCell.textContent.trim();
-
                 console.log('IAI Templates: Raw concerns:', data.concerns);
 
-                // Wyciągnij nazwę FIRMY z pierwszego linku (nie mylić z imieniem klienta!)
+                // NAJPIERW: Wyciągnij nazwę FIRMY z pierwszego linku
                 const companyLink = concernsCell.querySelector('a[title="View client-specific data and notes"]');
                 if (companyLink) {
                     data.clientCompanyName = companyLink.textContent.trim();
                     console.log('IAI Templates: Nazwa firmy:', data.clientCompanyName);
+                } else {
+                    console.warn('IAI Templates: Nie znaleziono linku do danych firmy');
                 }
 
                 // Wyciągnij shop ID z drugiego linku
@@ -1070,7 +1046,93 @@ ${templatesFormatted}
                 }
             }
 
-            console.log('IAI Templates: Wszystkie wyciągnięte dane:', data);
+            // TERAZ: Próbuj pobrać IMIĘ I NAZWISKO KLIENTA z różnych miejsc
+            console.log('IAI Templates: === DEBUG: Szukanie imienia i nazwiska klienta ===');
+            
+            // Metoda 1: Szukaj w td.row2.message-client
+            let foundClientName = false;
+            const messageClientCell = document.querySelector('td.row2.message-client');
+            console.log('IAI Templates: messageClientCell znaleziona:', !!messageClientCell);
+            
+            if (messageClientCell) {
+                // Spróbuj znaleźć post-creator w tej komórce
+                const postCreatorElement = messageClientCell.querySelector('b[id^="post-creator-"]');
+                console.log('IAI Templates: postCreatorElement znaleziony:', !!postCreatorElement);
+                
+                if (postCreatorElement) {
+                    const fullName = postCreatorElement.textContent.trim();
+                    console.log('IAI Templates: Znaleziono fullName w message-client:', fullName);
+                    
+                    if (fullName && fullName.length > 0) {
+                        data.clientName = fullName;
+                        foundClientName = true;
+                        
+                        // Rozdziel na imię i nazwisko
+                        const nameParts = fullName.split(' ').filter(part => part.length > 0);
+                        if (nameParts.length >= 1) {
+                            data.clientFirstName = nameParts[0];
+                        }
+                        if (nameParts.length >= 2) {
+                            data.clientLastName = nameParts.slice(1).join(' ');
+                        }
+                        
+                        console.log('IAI Templates: Ustawiono z message-client - Imię:', data.clientFirstName, 'Nazwisko:', data.clientLastName);
+                    }
+                }
+            }
+
+            // Metoda 2: Jeśli nie znaleziono, szukaj dowolnego post-creator
+            if (!foundClientName) {
+                console.log('IAI Templates: Nie znaleziono w message-client, szukam dowolnego post-creator...');
+                
+                // Znajdź wszystkie post-creator elementy
+                const allPostCreators = document.querySelectorAll('b[id^="post-creator-"]');
+                console.log('IAI Templates: Znaleziono post-creator elementów:', allPostCreators.length);
+                
+                for (let i = 0; i < allPostCreators.length; i++) {
+                    const element = allPostCreators[i];
+                    const fullName = element.textContent.trim();
+                    console.log(`IAI Templates: post-creator-${i}:`, fullName);
+                    
+                    // Użyj pierwszego niepustego
+                    if (fullName && fullName.length > 0 && !foundClientName) {
+                        data.clientName = fullName;
+                        foundClientName = true;
+                        
+                        // Rozdziel na imię i nazwisko
+                        const nameParts = fullName.split(' ').filter(part => part.length > 0);
+                        if (nameParts.length >= 1) {
+                            data.clientFirstName = nameParts[0];
+                        }
+                        if (nameParts.length >= 2) {
+                            data.clientLastName = nameParts.slice(1).join(' ');
+                        }
+                        
+                        console.log('IAI Templates: Ustawiono z post-creator - Pełne:', data.clientName, 'Imię:', data.clientFirstName, 'Nazwisko:', data.clientLastName);
+                        break;
+                    }
+                }
+            }
+
+            // Metoda 3: Fallback - jeśli nadal nie znaleziono, użyj clientCompanyName jako clientName (dla kompatybilności)
+            if (!foundClientName && data.clientCompanyName) {
+                console.log('IAI Templates: Fallback - używam clientCompanyName jako clientName dla kompatybilności');
+                data.clientName = data.clientCompanyName;
+                
+                // Spróbuj podzielić również na imię/nazwisko jeśli to brzmi jak imię
+                const nameParts = data.clientCompanyName.split(' ').filter(part => part.length > 0);
+                if (nameParts.length >= 2 && nameParts.length <= 4) { // Prawdopodobnie imię i nazwisko
+                    data.clientFirstName = nameParts[0];
+                    data.clientLastName = nameParts.slice(1).join(' ');
+                    console.log('IAI Templates: Fallback parsing - Imię:', data.clientFirstName, 'Nazwisko:', data.clientLastName);
+                }
+            }
+
+            console.log('IAI Templates: === FINAL CLIENT DATA ===');
+            console.log('IAI Templates: clientName (pełne):', data.clientName);
+            console.log('IAI Templates: clientFirstName:', data.clientFirstName);
+            console.log('IAI Templates: clientLastName:', data.clientLastName);
+            console.log('IAI Templates: clientCompanyName (firma):', data.clientCompanyName);
 
         } catch (error) {
             console.error('IAI Templates: Błąd podczas pobierania danych formularza:', error);
