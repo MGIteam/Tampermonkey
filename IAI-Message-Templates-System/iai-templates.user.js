@@ -2469,7 +2469,7 @@ ${escapeHtml(processedContent)}
             // Pokazuj notification tylko gdy GM działa
             if (gmWorking) {
                 setTimeout(() => {
-                    showNotification('📝 System szablonów IAI gotowy do pracy!', false);
+                    showNotification(`📝 System szablonów IAI gotowy do pracy! (${new Date().toLocaleString('pl-PL')})`, false);
                 }, 2000);
             }
 
