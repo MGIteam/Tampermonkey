@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         IAI Message Templates System - COMPLETE VERSION
 // @namespace    https://github.com/MGIteam/Tampermonkey
-// @version      1.3.1
+// @version      1.5.0
 // @description  System szablonów wiadomości ze zmiennymi dla systemu IAI z eksportem/importem
 // @author       Maciej Dobroń
 // @match        https://*.iai-system.com/panel/tickets.php?action=ins&ticketId=*
@@ -870,14 +870,18 @@ ${templatesFormatted}
         const data = {
             // Podstawowe zmienne
             ticketId: '',
-            clientName: '',
             priority: '',
             assignedTo: '',
             dateCreated: '',
             concerns: '',
             ticketTitle: '',
 
-            // Nowe zmienne klienta
+            // Zmienne klienta - osoby kontaktowej
+            clientName: '',           // Pełne imię i nazwisko
+            clientFirstName: '',      // Samo imię
+            clientLastName: '',       // Samo nazwisko
+
+            // Zmienne firmy klienta
             clientCompanyName: '',
             clientShopId: '',
             clientPlan: '',
@@ -915,11 +919,35 @@ ${templatesFormatted}
 
             // POBIERZ TYTUŁ TICKETU z nagłówka h1
             if (ticketHeader) {
-                // Szukaj wzorca: "Ticket #123456 - [TYP] - opis"
                 const titleMatch = ticketHeader.textContent.match(/Ticket #\d+ - (.+?)$/);
                 if (titleMatch) {
                     data.ticketTitle = titleMatch[1].trim();
                     console.log('IAI Templates: Tytuł ticketu:', data.ticketTitle);
+                }
+            }
+
+            // POBIERZ IMIĘ I NAZWISKO KLIENTA z post-creator
+            const messageClientCell = document.querySelector('td.row2.message-client');
+            if (messageClientCell) {
+                // Szukaj elementu <b> z id zaczynającym się od "post-creator-"
+                const postCreatorElement = messageClientCell.querySelector('b[id^="post-creator-"]');
+                if (postCreatorElement) {
+                    const fullName = postCreatorElement.textContent.trim();
+                    if (fullName) {
+                        data.clientName = fullName;
+                        console.log('IAI Templates: Pełne imię i nazwisko klienta:', data.clientName);
+
+                        // Rozdziel na imię i nazwisko
+                        const nameParts = fullName.split(' ').filter(part => part.length > 0);
+                        if (nameParts.length >= 1) {
+                            data.clientFirstName = nameParts[0];
+                        }
+                        if (nameParts.length >= 2) {
+                            data.clientLastName = nameParts.slice(1).join(' '); // Ostatnie części jako nazwisko
+                        }
+                        console.log('IAI Templates: Imię klienta:', data.clientFirstName);
+                        console.log('IAI Templates: Nazwisko klienta:', data.clientLastName);
+                    }
                 }
             }
 
@@ -968,11 +996,10 @@ ${templatesFormatted}
 
                 console.log('IAI Templates: Raw concerns:', data.concerns);
 
-                // Wyciągnij nazwę firmy z pierwszego linku
+                // Wyciągnij nazwę FIRMY z pierwszego linku (nie mylić z imieniem klienta!)
                 const companyLink = concernsCell.querySelector('a[title="View client-specific data and notes"]');
                 if (companyLink) {
                     data.clientCompanyName = companyLink.textContent.trim();
-                    data.clientName = data.clientCompanyName; // dla kompatybilności
                     console.log('IAI Templates: Nazwa firmy:', data.clientCompanyName);
                 }
 
@@ -981,10 +1008,9 @@ ${templatesFormatted}
                 if (shopLink) {
                     const shopSpan = shopLink.querySelector('span[title]');
                     if (shopSpan) {
-                        // Parsuj z tytułu: "id klienta: 52134, sklep: 1, server: vmshr19"
                         const titleMatch = shopSpan.title.match(/id klienta: (\d+), sklep: (\d+)/);
                         if (titleMatch) {
-                            data.clientShopId = titleMatch[1]; // ID klienta
+                            data.clientShopId = titleMatch[1];
                             console.log('IAI Templates: Shop ID:', data.clientShopId);
                         }
                     }
@@ -1016,12 +1042,6 @@ ${templatesFormatted}
                         if (text.includes('Webpage supervisor:')) {
                             data.clientWebpageSupervisor = text.replace('Webpage supervisor:', '').trim();
                             console.log('IAI Templates: Webpage supervisor:', data.clientWebpageSupervisor);
-                        }
-
-                        if (text.includes('Account Manager:')) {
-                            // Można dodać jako nową zmienną jeśli potrzebna
-                            const accountManager = text.replace('Account Manager:', '').trim();
-                            console.log('IAI Templates: Account Manager:', accountManager);
                         }
 
                         if (text.includes('project in progress:')) {
@@ -1062,18 +1082,22 @@ ${templatesFormatted}
     function replaceVariables(template, data) {
         let result = template;
 
-        // Wszystkie dostępne zmienne
-        const variables = {
-            // Podstawowe zmienne
+        // Podstawowe zmienne statyczne (bez przesunięć)
+        const staticVariables = {
+            // Podstawowe zmienne ticketu
             '{{TICKET_ID}}': data.ticketId || '',
-            '{{CLIENT_NAME}}': data.clientName || '', // dla kompatybilności
+            '{{TICKET_TITLE}}': data.ticketTitle || '',
             '{{PRIORITY}}': data.priority || '',
             '{{ASSIGNED_TO}}': data.assignedTo || '',
             '{{DATE_CREATED}}': data.dateCreated || '',
             '{{CONCERNS}}': data.concerns || '',
-            '{{TICKET_TITLE}}': data.ticketTitle || '',
 
-            // Nowe zmienne klienta
+            // Zmienne klienta - osoby kontaktowej
+            '{{CLIENT_NAME}}': data.clientName || '',
+            '{{CLIENT_FIRSTNAME}}': data.clientFirstName || '',
+            '{{CLIENT_LASTNAME}}': data.clientLastName || '',
+
+            // Zmienne firmy klienta
             '{{CLIENT_COMPANY_NAME}}': data.clientCompanyName || '',
             '{{CLIENT_SHOP_ID}}': data.clientShopId || '',
             '{{CLIENT_PLAN}}': data.clientPlan || '',
@@ -1085,22 +1109,90 @@ ${templatesFormatted}
             '{{CLIENT_TEMPLATE_DESIGN}}': data.clientTemplateDesign || '',
             '{{CLIENT_TEMPLATE_CODING}}': data.clientTemplateCoding || '',
 
-            // Zmienne czasowe
+            // Zmienne czasowe - podstawowe (bez przesunięć)
             '{{CURRENT_DATETIME}}': data.currentDateTime || '',
             '{{CURRENT_DATE}}': data.currentDate || '',
             '{{CURRENT_TIME}}': data.currentTime || ''
         };
 
-        // Zastąp wszystkie zmienne
-        Object.entries(variables).forEach(([variable, value]) => {
+        // 1. Najpierw zastąp zmienne statyczne
+        Object.entries(staticVariables).forEach(([variable, value]) => {
             const regex = new RegExp(variable.replace(/[{}]/g, '\\$&'), 'g');
             result = result.replace(regex, value);
         });
 
-        console.log('IAI Templates: Zastąpiono zmienne w szablonie');
-        console.log('IAI Templates: Przed:', template.substring(0, 100) + '...');
-        console.log('IAI Templates: Po:', result.substring(0, 100) + '...');
+        // 2. Następnie obsłuż zmienne czasowe z przesunięciami
+        result = replaceDateShiftVariables(result);
 
+        console.log('IAI Templates: Zastąpiono zmienne w szablonie');
+        return result;
+    }
+
+    function replaceDateShiftVariables(text) {
+        // Regex dla zmiennych z przesunięciami czasowymi:
+        // {{CURRENT_DATE+7}}, {{CURRENT_DATE-3}}, {{CURRENT_DATE+1M}}, {{CURRENT_DATETIME+2Y}} itd.
+        const dateShiftRegex = /\{\{(CURRENT_DATE|CURRENT_DATETIME|CURRENT_TIME)([+-])(\d+)([DMYQWH]?)\}\}/g;
+        
+        return text.replace(dateShiftRegex, (match, dateType, operator, amount, unit) => {
+            try {
+                const currentDate = new Date();
+                const shiftAmount = parseInt(amount);
+                const isAdd = operator === '+';
+                
+                console.log(`IAI Templates: Przetwarzanie ${match} - typ: ${dateType}, operator: ${operator}, ilość: ${shiftAmount}, jednostka: ${unit || 'D'}`);
+                
+                // Zastosuj przesunięcie
+                const shiftedDate = applyDateShift(currentDate, shiftAmount, unit || 'D', isAdd);
+                
+                // Sformatuj według typu zmiennej
+                switch(dateType) {
+                    case 'CURRENT_DATE':
+                        return shiftedDate.toLocaleDateString('pl-PL');
+                    case 'CURRENT_TIME':
+                        return shiftedDate.toLocaleTimeString('pl-PL');
+                    case 'CURRENT_DATETIME':
+                        return shiftedDate.toLocaleString('pl-PL');
+                    default:
+                        return shiftedDate.toLocaleString('pl-PL');
+                }
+            } catch (error) {
+                console.error('IAI Templates: Błąd podczas przetwarzania przesunięcia czasowego:', error);
+                return match; // Zwróć oryginalną zmienną jeśli błąd
+            }
+        });
+    }
+
+    function applyDateShift(date, amount, unit, isAdd) {
+        const result = new Date(date);
+        const multiplier = isAdd ? 1 : -1;
+        const shiftValue = amount * multiplier;
+
+        switch(unit.toUpperCase()) {
+            case 'H': // Godziny
+                result.setHours(result.getHours() + shiftValue);
+                break;
+            case 'D': // Dni (domyślne)
+            case '':
+                result.setDate(result.getDate() + shiftValue);
+                break;
+            case 'W': // Tygodnie
+                result.setDate(result.getDate() + (shiftValue * 7));
+                break;
+            case 'M': // Miesiące
+                result.setMonth(result.getMonth() + shiftValue);
+                break;
+            case 'Q': // Kwartały
+                result.setMonth(result.getMonth() + (shiftValue * 3));
+                break;
+            case 'Y': // Lata
+                result.setFullYear(result.getFullYear() + shiftValue);
+                break;
+            default:
+                // Jeśli nie rozpoznano jednostki, traktuj jako dni
+                result.setDate(result.getDate() + shiftValue);
+        }
+
+        console.log(`IAI Templates: Przesunięto datę o ${shiftValue} ${unit || 'D'}: ${date.toLocaleString('pl-PL')} → ${result.toLocaleString('pl-PL')}`);
         return result;
     }
 
@@ -2222,7 +2314,16 @@ ${templatesFormatted}
                         </div>
 
                         <div style="margin-bottom: 12px;">
-                            <strong style="color: #28a745;">👥 Dane klienta:</strong>
+                            <strong style="color: #28a745;">👥 Dane klienta (osoby kontaktowej):</strong>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 4px 0;">
+                                <span class="iai-variable-item" data-variable="{{CLIENT_NAME}}">{{CLIENT_NAME}}</span>
+                                <span class="iai-variable-item" data-variable="{{CLIENT_FIRSTNAME}}">{{CLIENT_FIRSTNAME}}</span>
+                                <span class="iai-variable-item" data-variable="{{CLIENT_LASTNAME}}">{{CLIENT_LASTNAME}}</span>
+                            </div>
+                        </div>                        
+
+                        <div style="margin-bottom: 12px;">
+                            <strong style="color: #17a2b8;">🏢 Dane firmy klienta:</strong>
                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin: 4px 0;">
                                 <span class="iai-variable-item" data-variable="{{CLIENT_COMPANY_NAME}}">{{CLIENT_COMPANY_NAME}}</span>
                                 <span class="iai-variable-item" data-variable="{{CLIENT_SHOP_ID}}">{{CLIENT_SHOP_ID}}</span>
@@ -2245,10 +2346,36 @@ ${templatesFormatted}
 
                         <div>
                             <strong style="color: #dc3545;">🕒 Zmienne czasowe:</strong>
+                            <div style="margin: 8px 0 4px 0; font-size: 11px; color: #666;">
+                                <strong>Podstawowe:</strong>
+                            </div>
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 4px 0;">
                                 <span class="iai-variable-item" data-variable="{{CURRENT_DATETIME}}">{{CURRENT_DATETIME}}</span>
                                 <span class="iai-variable-item" data-variable="{{CURRENT_DATE}}">{{CURRENT_DATE}}</span>
                                 <span class="iai-variable-item" data-variable="{{CURRENT_TIME}}">{{CURRENT_TIME}}</span>
+                            </div>
+                            
+                            <div style="margin: 12px 0 4px 0; font-size: 11px; color: #666;">
+                                <strong>Z przesunięciami czasowymi:</strong>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 4px 0;">
+                                <span class="iai-variable-item" data-variable="{{CURRENT_DATE+1}}">{{CURRENT_DATE+1}}</span>
+                                <span class="iai-variable-item" data-variable="{{CURRENT_DATE+7}}">{{CURRENT_DATE+7}}</span>
+                                <span class="iai-variable-item" data-variable="{{CURRENT_DATE+1M}}">{{CURRENT_DATE+1M}}</span>
+                                <span class="iai-variable-item" data-variable="{{CURRENT_DATE-3}}">{{CURRENT_DATE-3}}</span>
+                                <span class="iai-variable-item" data-variable="{{CURRENT_DATE+2W}}">{{CURRENT_DATE+2W}}</span>
+                                <span class="iai-variable-item" data-variable="{{CURRENT_DATE+1Y}}">{{CURRENT_DATE+1Y}}</span>
+                            </div>
+                            
+                            <div style="margin-top: 8px; padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; font-size: 11px; color: #856404;">
+                                <strong>💡 Dostępne jednostki przesunięć:</strong><br>
+                                • <strong>H</strong> = godziny ({{CURRENT_DATETIME+2H}})<br>
+                                • <strong>D</strong> = dni ({{CURRENT_DATE+5}} lub {{CURRENT_DATE+5D}})<br>
+                                • <strong>W</strong> = tygodnie ({{CURRENT_DATE+2W}})<br>
+                                • <strong>M</strong> = miesiące ({{CURRENT_DATE+3M}})<br>
+                                • <strong>Q</strong> = kwartały ({{CURRENT_DATE+1Q}})<br>
+                                • <strong>Y</strong> = lata ({{CURRENT_DATE+2Y}})<br>
+                                Przykład: {{CURRENT_DATE+14}} = obecna data + 14 dni
                             </div>
                         </div>
                     </div>
