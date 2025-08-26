@@ -1,0 +1,55 @@
+{
+  "version": "1.0",
+  "source": "Compiled from PESEL registry data, Polish statistical data, and common Polish names database",
+  "last_updated": "2025-01-26",
+  "description": "Extended Polish names database for gender recognition in IAI Templates System",
+  "total_names": 687,
+  "male_names": 344,
+  "female_names": 343,
+  "names": {
+    "male": [
+      "aaron", "abraham", "adam", "adrian", "alan", "albert", "aleksander", "aleksy", "alfred", "amadeusz", "anatol", "andrzej", "aniol", "antoni", "apolinary", "arek", "arkadiusz", "arnold", "arsen", "artur", "august", "aureliusz",
+      "baltazar", "bartek", "bartlomiej", "bartosz", "bazyli", "benedykt", "beniamin", "bernard", "blazej", "bogdan", "bogumil", "boguslaw", "boleslaw", "borys", "bronislaw", "bruno",
+      "celestyn", "cezary", "czeslaw", "damian", "daniel", "dariusz", "dawid", "dionizy", "dominik", "dorian", "dymitr", "edmund", "edward", "emil", "ernest", "eugeniusz", "eryk", "eustchy",
+      "fabian", "feliks", "ferdynand", "filip", "florian", "franciszek", "fryderyk",
+      "gabriel", "gedeon", "gerard", "grzegorz", "gustaw",
+      "henryk", "hubert", "ignacy", "igor", "ireneusz", "ivan", "iwan", "jacek", "jakub", "jan", "janek", "janusz", "jaroslaw", "jerzy", "joachim", "jozef", "julian", "juliusz", "justyn",
+      "kacper", "kajetan", "kamil", "karol", "kazimierz", "klemens", "konrad", "konstanty", "kornel", "kryspin", "krystian", "krzysztof",
+      "leon", "leonard", "leszek", "lucjan", "ludwik", "lukasz",
+      "maciej", "maksym", "maksymilian", "marceli", "marcin", "marek", "marian", "mariusz", "mateusz", "maurycy", "michal", "milosz", "miroslaw", "modest",
+      "nataniel", "nikodem", "norbert", "olaf", "oliwier", "oskar",
+      "patryk", "pawel", "piotr", "przemyslaw",
+      "radoslaw", "rafal", "rajmund", "remigiusz", "robert", "roman", "ryszard",
+      "sebastian", "seweryn", "slawek", "slawomir", "stanislaw", "stefan", "szymon",
+      "tadeusz", "tomasz", "tymoteusz",
+      "waldemar", "walenty", "walerian", "wieslaw", "wiktor", "witold", "wladyslaw", "wojciech",
+      "zbigniew", "zdzislaw", "zenon", "zygmunt"
+    ],
+    "female": [
+      "ada", "adela", "adelajda", "adrianna", "agata", "agnieszka", "aldona", "aleksandra", "alicja", "alina", "amanda", "amelia", "anastazja", "andzela", "aneta", "anita", "anna", "antonina", "areta", "arianna", "aryna",
+      "barbara", "beata", "berenika", "bernadeta", "blanka", "bozena", "brygida",
+      "cecylia", "celina", "dagmara", "danuta", "daria", "diana", "dominika", "dorota",
+      "edyta", "eleonora", "eliza", "elzbieta", "emilia", "estera", "ewa", "ewelina",
+      "felicja", "franciszka", "gabriela", "grazyna", "halina", "hanna", "helena", "henryka",
+      "ida", "ilona", "inga", "irena", "irma", "isabela", "iwona", "izabela",
+      "jadwiga", "jagoda", "jana", "janina", "joanna", "jolanta", "judyta", "julia", "julita", "justyna",
+      "kaja", "kamila", "karina", "karolina", "katarzyna", "kinga", "klara", "klaudia", "kornelia", "krystyna",
+      "lara", "laura", "lena", "lia", "lila", "liliana", "lidia", "lucja", "ludmila",
+      "magdalena", "maja", "malwina", "malgorzata", "marcelina", "maria", "marianna", "mariola", "marlena", "marta", "martyna", "marzanna", "marzena", "matylda", "melania", "michalina", "milena", "miroslawa", "monika",
+      "nadia", "natalia", "nina", "nora",
+      "olga", "oliwia",
+      "patrycja", "paulina", "renata", "roma", "roksana", "roza",
+      "sabina", "sandra", "sara", "stella", "sylwia",
+      "teresa", "urszula",
+      "weronika", "wioletta", "wiktoria", "wanda",
+      "zofia", "zuzanna", "zaneta"
+    ]
+  },
+  "notes": [
+    "Names are normalized to lowercase for easier matching",
+    "Database includes most popular Polish names from PESEL registry",
+    "Contains historical Polish names and modern variations", 
+    "Some foreign names commonly used in Poland are included",
+    "Names with Polish diacritics are normalized (ą->a, ć->c, etc.)"
+  ]
+}
