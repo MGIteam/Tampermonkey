@@ -4,22 +4,33 @@ Format oparty na [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.5.0] - 2025-08-26
 ### Dodano
+- **System rozpoznawania płci CLIENT_GENDER** - automatyczne rozpoznawanie płci na podstawie imienia (zwraca "Panu"/"Pani")
+- **Zmienna {{CURSOR}}** - pozwala precyzyjnie określić pozycję kursora po wczytaniu szablonu
+- **Rozszerzona baza polskich imion** - 687 imion (344 męskie + 343 żeńskie) pobierana z GitHub
+- **System cache dla bazy imion** - cache na 24h z automatycznym odświeżaniem
+- **Fallback offline dla imion** - zapasowa baza 75 imion na wypadek problemów z GitHub
 - System przesunięć czasowych dla zmiennych dat ({{CURRENT_DATE+7}}, {{CURRENT_DATE+1M}})
 - Obsługa jednostek czasowych: H(godziny), D(dni), W(tygodnie), M(miesiące), Q(kwartały), Y(lata)
-- Nowe zmienne klienta: {{CLIENT_FIRSTNAME}} i {{CLIENT_LASTNAME}}
+- Nowe zmienne klienta: {{CLIENT_FIRSTNAME}}, {{CLIENT_LASTNAME}}, {{CLIENT_GENDER}}
 - Reorganizacja zmiennych na logiczne sekcje w edytorze szablonów
 - Poprawa źródła danych dla {{CLIENT_NAME}} - teraz pobiera imię i nazwisko z post-creator
+- **Heurystyki językowe** - rozpoznawanie płci na podstawie polskich końcówek imion
 
 ### Zmieniono
+- **Funkcje async** - extractFormData() i powiązane funkcje są teraz asynchroniczne
 - {{CLIENT_NAME}} teraz zawiera imię i nazwisko klienta zamiast nazwy firmy
 - Źródło danych {{CLIENT_NAME}} zmienione z concerns na element post-creator w message-client
 - Podział zmiennych na sekcje: dane ticketu, dane klienta (osoby), dane firmy, supervision
 - Logika parsowania imienia/nazwiska z automatycznym podziałem na części
+- **System replaceVariables()** - zwraca obiekt z treścią i pozycją kursora
+- **Ulepszone pozycjonowanie kursora** - automatyczne ustawienie na końcu jeśli brak {{CURSOR}}
 
 ### Naprawiono
 - Błąd literowy "clizentName" w funkcji extractFormData()
 - Duplikowanie danych między CLIENT_NAME i CLIENT_COMPANY_NAME
 - Redundantne przypisanie zmiennych w kodzie
+- **Obsługa błędów sieci** - graceful handling gdy GitHub niedostępny
+- **Normalizacja polskich znaków** - właściwe przetwarzanie ą, ć, ę, ł, ń, ó, ś, ź, ż
 
 ## [1.4.0] - 2025-08-26
 ### Dodano
