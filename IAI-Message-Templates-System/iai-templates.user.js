@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         IAI Message Templates System - COMPLETE VERSION
-// @version      1.3.0
+// @version      1.0.0
 // @description  System szablonów wiadomości ze zmiennymi dla systemu IAI z eksportem/importem
 // @author       Maciej Dobroń
 // @match        https://*.iai-system.com/panel/tickets.php?action=ins&ticketId=*
